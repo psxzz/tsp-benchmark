@@ -1,24 +1,26 @@
 import os
+import time
+import functools
+from datetime import timedelta
 from os.path import isfile, join, splitext
 from .problem import TSPProblem
 from .solver import TSPSolver
+
+
+def _timer(func):
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        path, length = func(*args, **kwargs)
+        return (path, length), (time.perf_counter() - start)
+
+    return _wrapper
 
 
 class TSPBenchmark:
     def __init__(self, *problems: TSPProblem):
         self.problems = [p for p in problems]
         self.solvers = []
-
-    def _timer(func):
-        from time import time
-        from datetime import timedelta
-
-        def _wrapper(self, *args, **kwargs):
-            start = time()
-            path, length = func(self, *args, **kwargs)
-            return (path, length), timedelta(seconds=time() - start)
-
-        return _wrapper
 
     def add_problem_dir(self, path: str):
         self.problems.extend(
@@ -43,7 +45,7 @@ class TSPBenchmark:
 
     def run_benchmark(self):
         for problem in self.problems:
-            print(f"\nPROBLEM: {problem.name}")
+            # print(f"\nPROBLEM: {problem.name}")
             dm = problem.get_distance_matrix()
             for solver in self.solvers:
                 result, time = self.run_test(dm, solver)
@@ -51,8 +53,20 @@ class TSPBenchmark:
                     {
                         "solver": solver.name,
                         "path": list(map(lambda x: x + 1, result[0])),
-                        "path_length": result[1],
-                        "time_elapsed": time,
+                        "path_length": int(result[1]),
+                        "time_elapsed": float(time),
                     }
                 )
                 # print(f"{solver.name}: \t{result[1]} | {time}")
+
+    def dump_results(self):
+        import json
+
+        data = []
+        for problem in self.problems:
+            data.append(problem.dump())
+
+        with open("benchmark_results.json", "w+") as f:
+            json.dump(data, f, indent=2)
+
+        print(f"Results dumped at {os.getcwd()}/benchmark_results.json")

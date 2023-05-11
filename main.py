@@ -6,6 +6,7 @@ import solvers
 def main():
     problems_list = [
         benchmark.TSPProblem("./problemset/burma14.tsp"),
+        benchmark.TSPProblem("./problemset/berlin52.tsp"),
         # benchmark.TSPProblem("./problemset/a280.tsp"),
     ]
 
@@ -22,8 +23,7 @@ def main():
     bench.add_problems(*problems_list)
     bench.add_solvers(*solvers_list)
     bench.run_benchmark()
-
-    problems_list[0].show_solutions()
+    bench.dump_results()
 
 
 if __name__ == "__main__":

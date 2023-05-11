@@ -159,6 +159,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 .vscode/
+benchmark_results.json
 *.tsp
 solvers/*
 !solvers/__init__.py

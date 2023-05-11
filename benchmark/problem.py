@@ -6,39 +6,9 @@ from networkx import nx_pylab as nx
 
 class TSPProblem:
     def __init__(self, path) -> None:
-        # self.filepath = path
         self.object = tsplib95.load(path)
         self.name = self.object.name
         self.solutions = []
-
-    def visualize(self, path=None):
-        plt.figure(figsize=(10, 8))
-        G = self.object.get_graph()
-        plt.title(G.name)
-        pos = self.object.node_coords
-
-        if path is not None:
-            edges = []
-            for i in range(0, len(path) - 1):
-                edges.append((path[i], path[i + 1]))
-            edges.append((path[-1], path[0]))
-
-            nx.draw_networkx_nodes(G, pos)
-            nx.draw_networkx_labels(G, pos)
-            nx.draw_networkx_edges(G, pos, edge_color="lightgray")
-            nx.draw_networkx_edges(
-                G,
-                pos,
-                edgelist=edges,
-                edge_color="r",
-                arrows=True,
-                arrowstyle="-|>",
-                arrowsize=15,
-            )
-        else:
-            nx.draw(G, pos, with_labels=True, width=1)
-
-        plt.show()
 
     def get_distance_matrix(self):
         distance_matrix_flattened = np.array(
@@ -58,10 +28,12 @@ class TSPProblem:
         pos = self.object.node_coords
 
         fig, ax = plt.subplots(ncols=len(self.solutions), figsize=(16, 9))
-        print(self.solutions)
+        fig.suptitle(G.name, fontsize=18)
+
         for i, solution in enumerate(self.solutions):
-            edges = []
             path = solution["path"]
+
+            edges = []
             for j in range(0, len(path) - 1):
                 edges.append((path[j], path[j + 1]))
             edges.append((path[-1], path[0]))
@@ -84,3 +56,11 @@ class TSPProblem:
                 arrowsize=15,
             )
         plt.show()
+
+    def dump(self):
+        return {
+            "problem_name": self.name,
+            "description": self.object.comment,
+            "dimension": self.object.dimension,
+            "solutions": self.solutions,
+        }
