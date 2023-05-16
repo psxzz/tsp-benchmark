@@ -1,10 +1,10 @@
 import os
 import time
 import functools
-from datetime import timedelta
-from os.path import isfile, join, splitext
 from .problem import TSPProblem
 from .solver import TSPSolver
+from matplotlib import pyplot as plt
+from typing import List
 
 
 def _timer(func):
@@ -18,26 +18,15 @@ def _timer(func):
 
 
 class TSPBenchmark:
-    def __init__(self, *problems: TSPProblem):
-        self.problems = [p for p in problems]
-        self.solvers = []
-
-    def add_problem_dir(self, path: str):
-        self.problems.extend(
-            [
-                TSPProblem(join(path, p))
-                for p in os.listdir(path)
-                if isfile(join(path, p)) and splitext(p)[1] == ".tsp"
-            ]
-        )
+    def __init__(self):
+        self.problems: List[TSPProblem] = []
+        self.solvers: List[TSPSolver] = []
 
     def add_problems(self, *problems: TSPProblem):
-        for problem in problems:
-            self.problems.append(problem)
+        self.problems.extend(*problems)
 
     def add_solvers(self, *solvers: TSPSolver):
-        for solver in solvers:
-            self.solvers.append(solver)
+        self.solvers.extend(*solvers)
 
     @_timer
     def run_test(self, matrix, solver: TSPSolver):
@@ -45,7 +34,6 @@ class TSPBenchmark:
 
     def run_benchmark(self):
         for problem in self.problems:
-            # print(f"\nPROBLEM: {problem.name}")
             dm = problem.get_distance_matrix()
             for solver in self.solvers:
                 result, time = self.run_test(dm, solver)
@@ -53,20 +41,23 @@ class TSPBenchmark:
                     {
                         "solver": solver.name,
                         "path": list(map(lambda x: x + 1, result[0])),
-                        "path_length": int(result[1]),
-                        "time_elapsed": float(time),
+                        "length": int(result[1]),
+                        "time": float(time),
                     }
                 )
-                # print(f"{solver.name}: \t{result[1]} | {time}")
+                solver.solutions.append(
+                    {
+                        "problem": problem.dump(),
+                        "path": list(map(lambda x: x + 1, result[0])),
+                        "length": int(result[1]),
+                        "time": float(time),
+                    }
+                )
 
     def dump_results(self):
         import json
 
-        data = []
-        for problem in self.problems:
-            data.append(problem.dump())
-
         with open("benchmark_results.json", "w+") as f:
-            json.dump(data, f, indent=2)
+            json.dump({s.name: s.solutions for s in self.solvers}, f, indent=2)
 
         print(f"Results dumped at {os.getcwd()}/benchmark_results.json")

@@ -1,11 +1,12 @@
 import tsplib95
 import numpy as np
 from matplotlib import pyplot as plt
-from networkx import nx_pylab as nx
+import networkx as nx
+from datetime import timedelta
 
 
 class TSPProblem:
-    def __init__(self, path) -> None:
+    def __init__(self, path):
         self.object = tsplib95.load(path)
         self.name = self.object.name
         self.solutions = []
@@ -25,6 +26,7 @@ class TSPProblem:
     def show_solutions(self):
         assert len(self.solutions) > 0
         G = self.object.get_graph()
+        G.remove_edges_from(nx.selfloop_edges(G))
         pos = self.object.node_coords
 
         fig, ax = plt.subplots(ncols=len(self.solutions), figsize=(16, 9))
@@ -32,14 +34,10 @@ class TSPProblem:
 
         for i, solution in enumerate(self.solutions):
             path = solution["path"]
-
-            edges = []
-            for j in range(0, len(path) - 1):
-                edges.append((path[j], path[j + 1]))
-            edges.append((path[-1], path[0]))
+            edges = list(zip(path, path[1:]))
 
             ax[i].set_title(
-                f"{solution['solver']} - {solution['path_length']} | {solution['time_elapsed']}"
+                f"{solution['solver']} - {solution['length']} | {timedelta(seconds=solution['time'])}"
             )
 
             nx.draw_networkx_nodes(G, pos, ax=ax[i])
@@ -59,8 +57,8 @@ class TSPProblem:
 
     def dump(self):
         return {
-            "problem_name": self.name,
+            "name": self.name,
             "description": self.object.comment,
             "dimension": self.object.dimension,
-            "solutions": self.solutions,
+            # "solutions": self.solutions,
         }
