@@ -3,8 +3,8 @@ import time
 import functools
 from .problem import TSPProblem
 from .solver import TSPSolver
-from matplotlib import pyplot as plt
 from typing import List
+from matplotlib import pyplot as plt
 
 
 def _timer(func):
@@ -37,27 +37,35 @@ class TSPBenchmark:
             dm = problem.get_distance_matrix()
             for solver in self.solvers:
                 result, time = self.run_test(dm, solver)
-                problem.solutions.append(
-                    {
-                        "solver": solver.name,
-                        "path": list(map(lambda x: x + 1, result[0])),
-                        "length": int(result[1]),
-                        "time": float(time),
-                    }
-                )
-                solver.solutions.append(
-                    {
-                        "problem": problem.dump(),
-                        "path": list(map(lambda x: x + 1, result[0])),
-                        "length": int(result[1]),
-                        "time": float(time),
-                    }
-                )
+                problem.solutions[solver.name] = {
+                    "path": list(map(lambda x: x + 1, result[0])),
+                    "length": int(result[1]),
+                    "time": float(time),
+                }
 
     def dump_results(self):
         import json
 
         with open("benchmark_results.json", "w+") as f:
-            json.dump({s.name: s.solutions for s in self.solvers}, f, indent=2)
+            json.dump([s.dump() for s in self.problems], f, indent=2)
 
         print(f"Results dumped at {os.getcwd()}/benchmark_results.json")
+
+    def timechart(self):
+        plt.figure(figsize=(16, 9))
+        plt.title("Benchmark results: Timechart")
+        plt.xlabel("Dimension")
+        plt.ylabel("Time, sec.")
+
+        x = [p.dimension for p in self.problems]
+        ys = dict([(p.name, []) for p in self.solvers])
+        _ = [
+            [ys[k].append(v["time"]) for k, v in p.solutions.items()]
+            for p in self.problems
+        ]
+
+        for key, times in ys.items():
+            plt.plot(x, times, label=key)
+
+        plt.legend()
+        plt.show()
