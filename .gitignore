@@ -163,3 +163,4 @@ benchmark_results.json
 *.tsp
 solvers/*
 !solvers/__init__.py
+results/

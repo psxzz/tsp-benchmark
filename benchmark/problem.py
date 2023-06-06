@@ -12,6 +12,9 @@ class TSPProblem:
         self.dimension = self.object.dimension
         self.solutions = dict()
 
+    def __lt__(self, other):
+        return self.dimension < other.dimension
+
     def get_distance_matrix(self):
         distance_matrix_flattened = np.array(
             [self.object.get_weight(*edge) for edge in self.object.get_edges()]
@@ -41,7 +44,7 @@ class TSPProblem:
             ax[i].set_title(
                 f"{solver} - {solution['length']} | {timedelta(seconds=solution['time'])}"
             )
-
+            nx.christofides
             nx.draw_networkx_nodes(G, pos, ax=ax[i])
             nx.draw_networkx_labels(G, pos, ax=ax[i], font_color="black")
             nx.draw_networkx_edges(G, pos, ax=ax[i], edge_color="lightgray")
